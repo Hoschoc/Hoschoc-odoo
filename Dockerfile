@@ -1,16 +1,11 @@
 FROM ubuntu:jammy
-MAINTAINER Odoo S.A. <info@odoo.com>
 
 SHELL ["/bin/bash", "-xo", "pipefail", "-c"]
 
 # Generate locale C.UTF-8 for postgres and general locale data
 ENV LANG en_US.UTF-8
 
-# Retrieve the target architecture to install the correct wkhtmltopdf package
-ARG TARGETARCH
-
-# Install some deps, lessc and less-plugin-clean-css, and wkhtmltopdf
-
+# Install some deps, lessc and less-plugin-clean-css
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive \
     apt-get install -y --no-install-recommends \
@@ -37,8 +32,20 @@ RUN apt-get update && \
         python3-watchdog \
         python3-xlrd \
         python3-xlwt \
-        xz-utils && \
-    if [ -z "${TARGETARCH}" ]; then \
+        xz-utils \
+        fontconfig \
+        libx11-6 \
+        libxext6 \
+        libxrender1 \
+        xfonts-75dpi \
+        xfonts-base && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Retrieve the target architecture to install the correct wkhtmltopdf package
+ARG TARGETARCH
+
+RUN if [ -z "${TARGETARCH}" ]; then \
         TARGETARCH="$(dpkg --print-architecture)"; \
     fi; \
     WKHTMLTOPDF_ARCH=${TARGETARCH} && \
@@ -95,7 +102,7 @@ EXPOSE 8069 8071 8072
 # Set the default config file
 ENV ODOO_RC /etc/odoo/odoo.conf
 
-COPY wait-for-psql.py /usr/local/bin/wait-for-psql.py
+COPY check-db-status.py /usr/local/bin/check-db-status.py
 
 # Set default user when running the container
 USER odoo

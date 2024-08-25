@@ -23,10 +23,10 @@ services:
       - "8069:8069"
     environment:
       # PostgreSQL Development Environment Variables
-      - HOST=postgre-sql
-      - DB=odoo_db
-      - USER=odoo_user
-      - PASSWORD=JXPF9aDZeZWlrDpf
+      - POSTGRES_HOST=postgre-sql
+      - POSTGRES_DB=odoo_db
+      - POSTGRES_USER=odoo_user
+      - POSTGRES_PASSWORD=JXPF9aDZeZWlrDpf
     volumes:
       # Persist logs for the production Odoo instance
       - ./logs:/var/log/odoo
