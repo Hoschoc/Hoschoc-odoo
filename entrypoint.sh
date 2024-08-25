@@ -1,7 +1,13 @@
 #!/bin/bash
 
+# Disable output buffering for the entire script
+exec > >(stdbuf -oL tee /dev/fd/1)
+
 # Define a header for all echo statements
 HEADER="[entrypoint.sh]"
+
+# Define the path to odoo-bin
+ODOO_BIN="/usr/src/app/odoo/odoo-bin"
 
 # set the postgres database host, port, user and password according to the environment
 # and pass them as arguments to the odoo process if not present in the config file
@@ -42,7 +48,7 @@ case "$1" in
         if [[ "$1" == "scaffold" ]] ; then
             echo "$HEADER Running scaffold command..."
             # If it is "scaffold", execute the odoo command with the remaining arguments.
-            exec odoo "$@"
+            exec $ODOO_BIN "$@"
         else
             # Wait for PostgreSQL to be ready using the updated check-db-status.py script
             echo "$HEADER Checking PostgreSQL readiness and database initialization..."
@@ -50,11 +56,11 @@ case "$1" in
             result=$?
             if [ $result -eq 2 ]; then
                 echo "$HEADER Database not initialized. Running initialization..."
-                exec odoo -i base --stop-after-init "${DB_ARGS[@]}"
+                exec $ODOO_BIN -i base --stop-after-init "${DB_ARGS[@]}"
             fi
             # Run Odoo with the remaining arguments and database parameters
             echo "$HEADER Database is initialized. Starting Odoo..."
-            exec odoo "$@" "${DB_ARGS[@]}"
+            exec $ODOO_BIN "$@" "${DB_ARGS[@]}"
         fi
         ;;
     *)

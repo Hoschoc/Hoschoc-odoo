@@ -1,46 +1,67 @@
-FROM ubuntu:jammy
+# Base stage: Install dependencies
+FROM ubuntu:jammy AS base
 
 SHELL ["/bin/bash", "-xo", "pipefail", "-c"]
 
 # Generate locale C.UTF-8 for postgres and general locale data
 ENV LANG en_US.UTF-8
 
-# Install some deps, lessc and less-plugin-clean-css
+# Set environment variables to prevent Python from writing .pyc files and buffering stdout/stderr
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+# Set working directory inside the container
+WORKDIR /usr/src/app
+
+# Update package lists, install CA certificates, reconfigure them, and add the new mirror in one step
+RUN apt-get update && apt-get install -y ca-certificates && \
+    update-ca-certificates && \
+    sed -i '1ideb https://mirror.twds.com.tw/ubuntu/ jammy main restricted universe multiverse' /etc/apt/sources.list && \
+    sed -i '1ideb https://mirror.twds.com.tw/ubuntu/ jammy-updates main restricted universe multiverse' /etc/apt/sources.list && \
+    sed -i '1ideb https://mirror.twds.com.tw/ubuntu/ jammy-backports main restricted universe multiverse' /etc/apt/sources.list && \
+    sed -i '1ideb https://mirror.twds.com.tw/ubuntu/ jammy-security main restricted universe multiverse' /etc/apt/sources.list
+
+# Install dependencies for building Python packages and Odoo dependencies
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive \
     apt-get install -y --no-install-recommends \
-        ca-certificates \
-        curl \
-        dirmngr \
-        fonts-noto-cjk \
-        gnupg \
-        libssl-dev \
-        node-less \
-        npm \
-        python3-magic \
-        python3-num2words \
-        python3-odf \
-        python3-pdfminer \
-        python3-pip \
-        python3-phonenumbers \
-        python3-pyldap \
-        python3-qrcode \
-        python3-renderpm \
-        python3-setuptools \
-        python3-slugify \
-        python3-vobject \
-        python3-watchdog \
-        python3-xlrd \
-        python3-xlwt \
-        xz-utils \
-        fontconfig \
-        libx11-6 \
-        libxext6 \
-        libxrender1 \
-        xfonts-75dpi \
-        xfonts-base && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+    python3 \
+    python3-pip \
+    python3-dev \
+    build-essential \
+    zlib1g-dev \
+    libpq-dev \
+    libxml2-dev \
+    libxslt1-dev \
+    libldap2-dev \
+    libsasl2-dev \
+    libjpeg-dev \
+    libblas-dev \
+    libatlas-base-dev \
+    libssl-dev \
+    libffi-dev \
+    libfreetype6-dev \
+    libharfbuzz-dev \
+    libfribidi-dev \
+    libxcb1-dev \
+    libwebp-dev \
+    libx11-6 \
+    libxext6 \
+    libxrender1 \
+    xfonts-75dpi \
+    xfonts-base \
+    pkg-config \
+    git \
+    curl \
+    dirmngr \
+    fonts-noto-cjk \
+    gnupg \
+    node-less \
+    npm \
+    xz-utils \
+    fontconfig \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 # Retrieve the target architecture to install the correct wkhtmltopdf package
 ARG TARGETARCH
@@ -76,36 +97,30 @@ RUN echo 'deb http://apt.postgresql.org/pub/repos/apt/ jammy-pgdg main' > /etc/a
 # Install rtlcss (on Debian buster)
 RUN npm install -g rtlcss
 
-# Install Odoo
-ENV ODOO_VERSION 17.0
-ARG ODOO_RELEASE=20240819
-ARG ODOO_SHA=81689a80a074843ada7c712ba23cde1cfca9b63c
-RUN curl -o odoo.deb -sSL http://nightly.odoo.com/${ODOO_VERSION}/nightly/deb/odoo_${ODOO_VERSION}.${ODOO_RELEASE}_all.deb \
-    && echo "${ODOO_SHA} odoo.deb" | sha1sum -c - \
-    && apt-get update \
-    && apt-get -y install --no-install-recommends ./odoo.deb \
-    && rm -rf /var/lib/apt/lists/* odoo.deb
+# Install Poetry using pip
+RUN pip install poetry
 
+# Copy only pyproject.toml and poetry.lock for dependency installation
+COPY ./pyproject.toml ./poetry.lock ./
+
+# Install project dependencies using Poetry
+RUN poetry config virtualenvs.create false && poetry install --no-root
+
+
+# Final stage: Set up Odoo
+FROM base AS final
+
+# Copy local Odoo source code and addons to the image
 # Copy entrypoint script and Odoo configuration file
+COPY ./odoo ./odoo
+COPY ./addons ./addons
 COPY ./entrypoint.sh /
 COPY ./odoo.conf /etc/odoo/
-
-# Set permissions and Mount /var/lib/odoo to allow restoring filestore and /mnt/extra-addons for users addons
-RUN chown odoo /etc/odoo/odoo.conf \
-    && mkdir -p /mnt/extra-addons \
-    && chown -R odoo /mnt/extra-addons
-VOLUME ["/var/lib/odoo", "/mnt/extra-addons"]
-
-# Expose Odoo services
-EXPOSE 8069 8071 8072
 
 # Set the default config file
 ENV ODOO_RC /etc/odoo/odoo.conf
 
 COPY check-db-status.py /usr/local/bin/check-db-status.py
-
-# Set default user when running the container
-USER odoo
 
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["odoo"]

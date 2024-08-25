@@ -1,5 +1,5 @@
 services:
-  postgre-sql:
+  postgresql:
     image: postgres:16.4
     restart: always
     networks:
@@ -16,20 +16,22 @@ services:
     build: .
     restart: always
     depends_on:
-      - postgre-sql
+      - postgresql
     networks:
       - odoo-net
     ports:
-      - "8069:8069"
+      - "8069:8069" # Expose Odoo's main HTTP service port for accessing the web interface.
+      - "8071:8071" # Expose XML-RPC over HTTPS for secure external integrations.
+      - "8072:8072" # Expose long-polling port for real-time features like chat notifications.
     environment:
       # PostgreSQL Development Environment Variables
-      - POSTGRES_HOST=postgre-sql
+      - POSTGRES_HOST=postgresql
       - POSTGRES_DB=odoo_db
       - POSTGRES_USER=odoo_user
       - POSTGRES_PASSWORD=JXPF9aDZeZWlrDpf
     volumes:
       # Persist logs for the production Odoo instance
-      - ./logs:/var/log/odoo
+      - ./odoo-data:/var/lib/odoo
 
 
 networks:
