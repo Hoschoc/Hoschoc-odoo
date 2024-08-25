@@ -2,6 +2,7 @@
 FROM ubuntu:jammy AS base
 
 SHELL ["/bin/bash", "-xo", "pipefail", "-c"]
+WORKDIR /root
 
 # Generate locale C.UTF-8 for postgres and general locale data
 ENV LANG en_US.UTF-8
@@ -9,9 +10,6 @@ ENV LANG en_US.UTF-8
 # Set environment variables to prevent Python from writing .pyc files and buffering stdout/stderr
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
-
-# Set working directory inside the container
-WORKDIR /usr/src/app
 
 # Update package lists, install CA certificates, reconfigure them, and add the new mirror in one step
 RUN apt-get update && apt-get install -y ca-certificates && \
@@ -110,17 +108,19 @@ RUN poetry config virtualenvs.create false && poetry install --no-root
 # Final stage: Set up Odoo
 FROM base AS final
 
-# Copy local Odoo source code and addons to the image
-# Copy entrypoint script and Odoo configuration file
-COPY ./odoo ./odoo
-COPY ./addons ./addons
-COPY ./entrypoint.sh /
-COPY ./odoo.conf /etc/odoo/
+# Set working directory inside the container
+WORKDIR /usr/src/app/odoo
 
 # Set the default config file
 ENV ODOO_RC /etc/odoo/odoo.conf
 
-COPY check-db-status.py /usr/local/bin/check-db-status.py
+# Copy local Odoo source code and addons to the image
+# Copy entrypoint script and Odoo configuration file
+COPY ./odoo /usr/src/app/odoo
+COPY ./addons /opt/odoo/custom_addons
+COPY ./odoo.conf /etc/odoo/
+COPY ./check-db-status.py /usr/local/bin/
+COPY ./entrypoint.sh /
 
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["odoo"]

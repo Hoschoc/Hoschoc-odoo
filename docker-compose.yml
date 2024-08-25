@@ -32,6 +32,12 @@ services:
     volumes:
       # Persist logs for the production Odoo instance
       - odoo-data:/var/lib/odoo
+      - ./odoo.conf:/etc/odoo/odoo.conf  # Dev: Mount odoo.conf for easy config changes
+      - ./entrypoint.sh:/entrypoint.sh  # Dev: Mount entrypoint script for updates
+      - ./odoo:/usr/src/app/odoo  # Dev: Mount Odoo source for live code changes
+      - ./addons:/opt/odoo/addons  # Dev: Mount custom addons for development
+      - ./tutorials:/opt/odoo/tutorials  # Tutorial: Mount tutorials directory inside container
+
 
 
 networks:
