@@ -31,7 +31,7 @@ services:
       - POSTGRES_PASSWORD=JXPF9aDZeZWlrDpf
     volumes:
       # Persist logs for the production Odoo instance
-      - ./odoo-data:/var/lib/odoo
+      - odoo-data:/var/lib/odoo
 
 
 networks:
@@ -39,7 +39,7 @@ networks:
     driver: bridge
 
 volumes:
-  # Volumes for persisting database data
-  db-data:
+  db-data: # database persisti data
+  odoo-data: # odoo persist data like filestore, sessions, etc.
 
 
