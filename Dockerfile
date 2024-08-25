@@ -2,7 +2,9 @@
 FROM ubuntu:jammy AS base
 
 SHELL ["/bin/bash", "-xo", "pipefail", "-c"]
-WORKDIR /root
+
+# Set working directory inside the container
+WORKDIR /usr/src/app
 
 # Generate locale C.UTF-8 for postgres and general locale data
 ENV LANG en_US.UTF-8
@@ -108,19 +110,17 @@ RUN poetry config virtualenvs.create false && poetry install --no-root
 # Final stage: Set up Odoo
 FROM base AS final
 
-# Set working directory inside the container
-WORKDIR /usr/src/app/odoo
-
 # Set the default config file
 ENV ODOO_RC /etc/odoo/odoo.conf
 
 # Copy local Odoo source code and addons to the image
 # Copy entrypoint script and Odoo configuration file
 COPY ./odoo /usr/src/app/odoo
-COPY ./addons /opt/odoo/custom_addons
+COPY ./addons /opt/odoo/addons
 COPY ./odoo.conf /etc/odoo/
 COPY ./check-db-status.py /usr/local/bin/
 COPY ./entrypoint.sh /
+WORKDIR /usr/src/app/odoo
 
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["odoo"]
