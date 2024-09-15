@@ -1,6 +1,21 @@
 # Base stage: Install dependencies
 FROM ubuntu:jammy AS base
 
+# The following Dockerfile installs dependencies in two phases:
+#
+# 1. In the first phase, we install the build-time dependencies and system-level
+#    utilities required for the overall Docker setup, including dependencies for 
+#    wkhtmltox, postgresql-client, and other essential tools.
+#
+# 2. In the second phase, we install the remaining dependencies for Odoo, gathered from:
+#    a) Dependencies listed in the Odoo .deb package to ensure full coverage.
+#    b) Dependencies mentioned in the debian/control file but missing from the .deb package
+#       (e.g., python3-lxml-html-clean).
+#
+# We are temporarily not using Poetry for Python package management and instead
+# using apt to install all dependencies, aiming for consistency and a simplified setup.
+
+
 SHELL ["/bin/bash", "-xo", "pipefail", "-c"]
 
 # Set working directory inside the container
@@ -10,8 +25,8 @@ WORKDIR /usr/src/app
 ENV LANG en_US.UTF-8
 
 # Set environment variables to prevent Python from writing .pyc files and buffering stdout/stderr
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
 
 # Update package lists, install CA certificates, reconfigure them, and add the new mirror in one step
 RUN apt-get update && apt-get install -y ca-certificates && \
@@ -21,52 +36,37 @@ RUN apt-get update && apt-get install -y ca-certificates && \
     sed -i '1ideb https://mirror.twds.com.tw/ubuntu/ jammy-backports main restricted universe multiverse' /etc/apt/sources.list && \
     sed -i '1ideb https://mirror.twds.com.tw/ubuntu/ jammy-security main restricted universe multiverse' /etc/apt/sources.list
 
-# Install dependencies for building Python packages and Odoo dependencies
+# This section installs essential system utilities, Python libraries, and other packages required
+# primarily for the installation of wkhtmltox.deb, which is used for converting HTML to PDF within Odoo.
+# While some Python packages are installed here, they are dependencies for wkhtmltox or system tools,
+# and NOT specifically for Odoo. Odoo dependencies will be handled separately later in the Dockerfile.
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive \
     apt-get install -y --no-install-recommends \
-    python3 \
-    python3-pip \
-    python3-dev \
-    build-essential \
-    zlib1g-dev \
-    libpq-dev \
-    libxml2-dev \
-    libxslt1-dev \
-    libldap2-dev \
-    libsasl2-dev \
-    libjpeg-dev \
-    libblas-dev \
-    libatlas-base-dev \
-    libssl-dev \
-    libffi-dev \
-    libfreetype6-dev \
-    libharfbuzz-dev \
-    libfribidi-dev \
-    libxcb1-dev \
-    libwebp-dev \
-    libx11-6 \
-    libxext6 \
-    libxrender1 \
-    xfonts-75dpi \
-    xfonts-base \
-    pkg-config \
-    git \
-    curl \
-    dirmngr \
-    fonts-noto-cjk \
-    gnupg \
-    node-less \
-    npm \
-    xz-utils \
-    fontconfig \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
-
-# Retrieve the target architecture to install the correct wkhtmltopdf package
-ARG TARGETARCH
-
-RUN if [ -z "${TARGETARCH}" ]; then \
+        curl \
+        dirmngr \
+        fonts-noto-cjk \
+        gnupg \
+        libssl-dev \
+        node-less \
+        npm \
+        python3-magic \
+        python3-num2words \
+        python3-odf \
+        python3-pdfminer \
+        python3-pip \
+        python3-phonenumbers \
+        python3-pyldap \
+        python3-qrcode \
+        python3-renderpm \
+        python3-setuptools \
+        python3-slugify \
+        python3-vobject \
+        python3-watchdog \
+        python3-xlrd \
+        python3-xlwt \
+        xz-utils && \
+    if [ -z "${TARGETARCH}" ]; then \
         TARGETARCH="$(dpkg --print-architecture)"; \
     fi; \
     WKHTMLTOPDF_ARCH=${TARGETARCH} && \
@@ -97,15 +97,77 @@ RUN echo 'deb http://apt.postgresql.org/pub/repos/apt/ jammy-pgdg main' > /etc/a
 # Install rtlcss (on Debian buster)
 RUN npm install -g rtlcss
 
-# Install Poetry using pip
-RUN pip install poetry
+# Second phase: Install Odoo-specific dependencies
+# These dependencies are gathered from:
+# 1. The Odoo .deb package dependencies.
+# 2. python3-lxml-html-clean, which is mentioned in the debian/control file but not in the final .deb package.
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    python3-babel \
+    python3-chardet \
+    python3-cryptography \
+    python3-dateutil \
+    python3-decorator \
+    python3-docutils \
+    python3-geoip2 \
+    python3-gevent \
+    python3-greenlet \
+    python3-idna \
+    python3-jinja2 \
+    python3-libsass \
+    python3-lxml \
+    python3-markupsafe \
+    python3-num2words \
+    python3-ofxparse \
+    python3-openssl \
+    python3-passlib \
+    python3-pil \
+    python3-polib \
+    python3-psutil \
+    python3-psycopg2 \
+    python3-pydot \
+    python3-pypdf2 \
+    python3-qrcode \
+    python3-reportlab \
+    python3-requests \
+    python3-rjsmin \
+    python3-serial \
+    python3-stdnum \
+    python3-tz \
+    python3-urllib3 \
+    python3-usb \
+    python3-vobject \
+    python3-werkzeug \
+    python3-xlrd \
+    python3-xlsxwriter \
+    python3-xlwt \
+    python3-zeep \
+    adduser \
+    fonts-dejavu-core \
+    fonts-freefont-ttf \
+    fonts-freefont-otf \
+    fonts-noto-core \
+    fonts-inconsolata \
+    fonts-font-awesome \
+    fonts-roboto-unhinted \
+    gsfonts \
+    libjs-underscore \
+    lsb-base \
+    postgresql-client \
+    python3-freezegun \
+    python3-renderpm \
+#    python3-lxml-html-clean \
+    && apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
-# Copy only pyproject.toml and poetry.lock for dependency installation
-COPY ./pyproject.toml ./poetry.lock ./
-
-# Install project dependencies using Poetry
-RUN poetry config virtualenvs.create false && poetry install --no-root
-
+## Install Poetry using pip
+#RUN pip install poetry
+#
+## Copy only pyproject.toml and poetry.lock for dependency installation
+#COPY ./pyproject.toml ./poetry.lock ./
+#
+## Install project dependencies using Poetry
+#RUN poetry config virtualenvs.create false && poetry install --no-root
 
 # Final stage: Set up Odoo
 FROM base AS final
