@@ -160,15 +160,6 @@ RUN apt-get update && \
     && apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-## Install Poetry using pip
-#RUN pip install poetry
-#
-## Copy only pyproject.toml and poetry.lock for dependency installation
-#COPY ./pyproject.toml ./poetry.lock ./
-#
-## Install project dependencies using Poetry
-#RUN poetry config virtualenvs.create false && poetry install --no-root
-
 # Final stage: Set up Odoo
 FROM base AS final
 
