@@ -1,3 +1,19 @@
+# This docker-compose file is designed for development and testing purposes, specifically to test the integration of Odoo with the custom Dockerfile in this repository. It allows for quick testing of Odoo itself and any custom Odoo modules included.
+#
+# **Note**: This setup is not intended for production deployment.
+
+# Odoo does not natively support splitting configuration files or securely managing the `admin_passwd` via environment variables. To address this limitation, we use the# `CONF_OVERRIDE_WITH_SECURE` environment variable to handle sensitive settings.
+#
+# When `CONF_OVERRIDE_WITH_SECURE` is set to "true":
+#
+# 1. You must bind both the general and sensitive configuration files to these paths:
+#    - General config: /etc/odoo/odoo_general.conf
+#    - Sensitive config: /etc/odoo/odoo_sensitive.conf
+#
+# 2. At runtime, these files are merged into a single `/etc/odoo/odoo.conf` file, overriding existing odoo.conf
+#
+# Ensure sensitive files are never included in version control.
+
 services:
   postgresql:
     image: postgres:16.4
@@ -29,13 +45,18 @@ services:
       - POSTGRES_DB=odoo_db
       - POSTGRES_USER=odoo_user
       - POSTGRES_PASSWORD=JXPF9aDZeZWlrDpf
+      - CONF_OVERRIDE_WITH_SECURE=true  # Set to enable merging of config files
     volumes:
       # Persist logs for the production Odoo instance
       - odoo-data:/var/lib/odoo
-      - ./odoo.conf:/etc/odoo/odoo.conf  # Dev: Mount odoo.conf for easy config changes
-      - ./entrypoint.sh:/entrypoint.sh  # Dev: Mount entrypoint script for updates
-      - ./odoo:/usr/src/app/odoo  # Dev: Mount Odoo source for live code changes
-      - ./addons:/opt/odoo/addons  # Dev: Mount custom addons for development
+
+      - ./odoo_general.conf:/etc/odoo/odoo_general.conf  # General config file
+      - ./odoo_sensitive.conf:/etc/odoo/odoo_sensitive.conf  # Sensitive config file with passwords
+#      - ./odoo.conf:/etc/odoo/odoo.conf  # Dev: Mount odoo.conf for easy config changes (won't be used while CONF_OVERRIDE_WITH_SECURE is set to true)
+
+#      - ./entrypoint.sh:/entrypoint.sh  # Dev: Mount entrypoint script for updates
+#      - ./odoo:/usr/src/app/odoo  # Dev: Mount Odoo source for live code changes
+#      - ./addons:/opt/odoo/addons  # Dev: Mount custom addons for development
       - ./tutorials:/opt/odoo/tutorials  # Tutorial: Mount tutorials directory inside container
 
 networks:
