@@ -1,10 +1,8 @@
 #!/bin/bash
 
-# Disable output buffering for the entire script
-exec > >(stdbuf -oL tee /dev/fd/1)
-
 # Define a header for all echo statements
 HEADER="[entrypoint.sh]"
+echo "$HEADER Running with PID $$ at $(date)"
 
 # Define the path to odoo-bin
 ODOO_BIN="/usr/src/app/odoo/odoo-bin"
