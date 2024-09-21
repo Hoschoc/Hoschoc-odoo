@@ -11,8 +11,9 @@
 usage() {
     echo "Usage: $0 [odoo command parameters]"
     echo "Example:"
-    echo "  $0 -u estate"
     echo "  $0"
+    echo "  $0 -u estate"
+    echo "  $0 -u estate --dev xml"
     exit 1
 }
 
