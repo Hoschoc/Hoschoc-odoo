@@ -7,7 +7,7 @@ echo "$HEADER Running with PID $$ at $(date)"
 # Define the path to odoo-bin
 ODOO_BIN="/usr/src/app/odoo/odoo-bin"
 
-# Function to combine general and sensitive config files into a single config If the environment variable CONF_OVERRIDE_WITH_SECURE is set to "true", it merges the content of the general config file (/etc/odoo/odoo_general.conf) and the sensitive config file (/etc/odoo/odoo_sensitive.conf) into a single file (/etc/odoo/odoo.conf). This merged file will then be used by odoo during startup.
+# Function to combine general and sensitive config files into a single config If the environment variable CONF_OVERRIDE_WITH_SECURE is set to "true", it merges the content of the general config file (/etc/odoo/odoo-general.conf) and the sensitive config file (/etc/odoo/odoo-sensitive.conf) into a single file (/etc/odoo/odoo.conf). This merged file will then be used by odoo during startup.
 #
 # If CONF_OVERRIDE_WITH_SECURE is not set or is set to "false", the function skips the merge process and continues using the default configuration that was either copied into the container during the Dockerfile build process (typically /etc/odoo/odoo.conf) or mounted into the container via docker-compose or similar methods. This ensures that sensitive configuration data is only included when explicitly enabled, and the system falls back to a default configuration if no override is needed.
 function combine_general_and_sensitive_configs() {
@@ -15,9 +15,9 @@ function combine_general_and_sensitive_configs() {
         echo "$HEADER CONF_OVERRIDE_WITH_SECURE is set to 'true'. Proceeding with config merge..."
 
         # Verify both general and sensitive config files exist before merging
-        if [ -f /etc/odoo/odoo_general.conf ] && [ -f /etc/odoo/odoo_sensitive.conf ]; then
+        if [ -f /etc/odoo/odoo-general.conf ] && [ -f /etc/odoo/odoo-sensitive.conf ]; then
             echo "$HEADER Found both general and sensitive config files."
-            cat /etc/odoo/odoo_general.conf /etc/odoo/odoo_sensitive.conf > /etc/odoo/odoo.conf
+            cat /etc/odoo/odoo-general.conf /etc/odoo/odoo-sensitive.conf > /etc/odoo/odoo.conf
             echo "$HEADER Config files merged into /etc/odoo/odoo.conf"
         else
             echo "$HEADER Error: One or both of the config files are missing. Merge aborted."

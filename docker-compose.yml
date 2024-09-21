@@ -7,8 +7,8 @@
 # When `CONF_OVERRIDE_WITH_SECURE` is set to "true":
 #
 # 1. You must bind both the general and sensitive configuration files to these paths:
-#    - General config: /etc/odoo/odoo_general.conf
-#    - Sensitive config: /etc/odoo/odoo_sensitive.conf
+#    - General config: /etc/odoo/odoo-general.conf
+#    - Sensitive config: /etc/odoo/odoo-sensitive.conf
 #
 # 2. At runtime, these files are merged into a single `/etc/odoo/odoo.conf` file, overriding existing odoo.conf
 #
@@ -50,8 +50,8 @@ services:
       # Persist logs for the production Odoo instance
       - odoo-data:/var/lib/odoo
 
-      - ./odoo_general.conf:/etc/odoo/odoo_general.conf  # General config file
-      - ./odoo_sensitive.conf:/etc/odoo/odoo_sensitive.conf  # Sensitive config file with passwords
+      - ./odoo-general.conf:/etc/odoo/odoo-general.conf  # General config file
+      - ./odoo-sensitive.conf:/etc/odoo/odoo-sensitive.conf  # Sensitive config file with passwords
 #      - ./odoo.conf:/etc/odoo/odoo.conf  # Dev: Mount odoo.conf for easy config changes (won't be used while CONF_OVERRIDE_WITH_SECURE is set to true)
 
 #      - ./odoo:/usr/src/app/odoo  # Dev: Mount Odoo source for live code changes
