@@ -27,7 +27,7 @@ Instead of manually creating the `docker-compose.override.yml` file, you can use
 3. Restart the service with the new command.
 4. Remove the override file after the service restarts.
 
-#### Script: `./misc/odoo_restart.sh`
+#### Script: `./misc/odoo-restart.sh`
 
     ```bash
     #!/bin/bash
@@ -96,13 +96,13 @@ Instead of manually creating the `docker-compose.override.yml` file, you can use
 You can execute the script with the parameters for the odoo command you want to run. For example:
 
     ```bash
-    ./misc/odoo_restart.sh -u estate
+    ./misc/odoo-restart.sh -u estate
     ```
 
 Or specify the database and update the module:
 
     ```bash
-    ./misc/odoo_restart.sh -d rd-demo -u estate
+    ./misc/odoo-restart.sh -d rd-demo -u estate
     ```
 
 The script will automatically stop the odoo service, apply the new command, and start the service. Afterward, it will remove the override file, so the next time you start the services, they will use the original command.
