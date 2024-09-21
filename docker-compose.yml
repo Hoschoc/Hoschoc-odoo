@@ -58,6 +58,19 @@ services:
 #      - ./addons:/opt/odoo/addons  # Dev: Mount custom addons for development
       - ./tutorials:/opt/odoo/tutorials  # Tutorial: Mount tutorials directory inside container
 
+  postgresql-admin:
+    image: dpage/pgadmin4:8.10
+    restart: always
+    networks:
+      - odoo-net
+    ports:
+      - "8080:80" # Expose pgadmin's HTTP service port
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=odoo-db@hoschoc.com
+      - PGADMIN_DEFAULT_PASSWORD=K3dL9tew3FX7fQvM
+    volumes:
+      - db-admin-data:/var/lib/pgadmin # Persist pgAdmin's configuration data
+
 networks:
   odoo-net:
     driver: bridge
@@ -65,5 +78,6 @@ networks:
 volumes:
   db-data: # database persisti data
   odoo-data: # odoo persist data like filestore, sessions, etc.
+  db-admin-data: # pgAdmin persist data
 
 
