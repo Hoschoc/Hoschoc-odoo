@@ -7,7 +7,7 @@ echo "$HEADER Running with PID $$ at $(date)"
 # Define the path to odoo-bin
 ODOO_BIN="/usr/src/app/odoo/odoo-bin"
 
-# Function to combine general and sensitive config files into a single config If the environment variable CONF_OVERRIDE_WITH_SECURE is set to "true", it merges the content of the general config file (/etc/odoo/odoo_general.conf) and the sensitive config file (/etc/odoo/odoo_sensitive.conf) into a single file (/etc/odoo/odoo.conf). This merged file will then be used by Odoo during startup.
+# Function to combine general and sensitive config files into a single config If the environment variable CONF_OVERRIDE_WITH_SECURE is set to "true", it merges the content of the general config file (/etc/odoo/odoo_general.conf) and the sensitive config file (/etc/odoo/odoo_sensitive.conf) into a single file (/etc/odoo/odoo.conf). This merged file will then be used by odoo during startup.
 #
 # If CONF_OVERRIDE_WITH_SECURE is not set or is set to "false", the function skips the merge process and continues using the default configuration that was either copied into the container during the Dockerfile build process (typically /etc/odoo/odoo.conf) or mounted into the container via docker-compose or similar methods. This ensures that sensitive configuration data is only included when explicitly enabled, and the system falls back to a default configuration if no override is needed.
 function combine_general_and_sensitive_configs() {
@@ -63,38 +63,39 @@ check_config "db_user" "$DB_USER"
 check_config "db_password" "$DB_PASSWORD"
 check_config "database" "$DB_NAME"
 
+# This section handles different input arguments:
+# - If the first argument is "odoo", it processes "scaffold" or runs Odoo with the provided arguments.
+#   Additionally, it checks the PostgreSQL readiness and initializes the database if necessary.
+# - For any other input, it directly executes the given command.
 
-# This section of the script handles different input arguments:
-# if the first argument is "--" or "odoo", it either scaffolds a new module or waits for PostgreSQL to be ready before running Odoo with appropriate database parameters;
-# if the first argument is a flag, it similarly waits for PostgreSQL before executing Odoo with the provided flags; 
-# for any other input, it executes the command directly.
 case "$1" in
-    odoo) # If the first argument is "odoo".
-        shift # removes $1.
+    odoo)
+        shift # Removes $1 ("odoo")
 
-        # Check if the next argument is "scaffold". usage: odoo scaffold my_module /path/to/your/addons
-        if [[ "$1" == "scaffold" ]] ; then
+        if [[ "$1" == "scaffold" ]]; then
             echo "$HEADER Running scaffold command..."
-            # If it is "scaffold", execute the odoo command with the remaining arguments.
+            echo "$HEADER Executing: $ODOO_BIN $@"
             exec $ODOO_BIN "$@"
+
         else
-            # Wait for PostgreSQL to be ready using the updated check-db-status.py script
             echo "$HEADER Checking PostgreSQL readiness and database initialization..."
-            check-db-status.py ${DB_ARGS[@]} --timeout=30
+            check-db-status.py "${DB_ARGS[@]}" --timeout=30
             result=$?
             if [ $result -eq 2 ]; then
                 echo "$HEADER Database not initialized. Running initialization..."
+                echo "$HEADER Executing: $ODOO_BIN -i base --stop-after-init ${DB_ARGS[@]}"
                 exec $ODOO_BIN -i base --stop-after-init "${DB_ARGS[@]}"
             fi
-            # Run Odoo with the remaining arguments and database parameters
-            echo "$HEADER Database is initialized. Starting Odoo..."
+            echo "$HEADER Database is initialized. Starting odoo..."
+            echo "$HEADER Executing: $ODOO_BIN $@ ${DB_ARGS[@]}"
             exec $ODOO_BIN "$@" "${DB_ARGS[@]}"
         fi
         ;;
     *)
-        # For any other command, execute it directly.
         echo "$HEADER Executing custom command: $@"
+        echo "$HEADER Executing: $@"
         exec "$@"
+        ;;
 esac
 
 exit 1

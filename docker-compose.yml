@@ -54,7 +54,6 @@ services:
       - ./odoo_sensitive.conf:/etc/odoo/odoo_sensitive.conf  # Sensitive config file with passwords
 #      - ./odoo.conf:/etc/odoo/odoo.conf  # Dev: Mount odoo.conf for easy config changes (won't be used while CONF_OVERRIDE_WITH_SECURE is set to true)
 
-#      - ./entrypoint.sh:/entrypoint.sh  # Dev: Mount entrypoint script for updates
 #      - ./odoo:/usr/src/app/odoo  # Dev: Mount Odoo source for live code changes
 #      - ./addons:/opt/odoo/addons  # Dev: Mount custom addons for development
       - ./tutorials:/opt/odoo/tutorials  # Tutorial: Mount tutorials directory inside container
