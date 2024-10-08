@@ -21,7 +21,7 @@ services:
     networks:
       - odoo-net
     environment:
-      - POSTGRES_DB=odoo_db
+      - POSTGRES_DB=postgres # can't modify due to issue: https://github.com/odoo/odoo/issues/182551
       - POSTGRES_USER=odoo_user
       - POSTGRES_PASSWORD=JXPF9aDZeZWlrDpf
     volumes:
@@ -42,7 +42,6 @@ services:
     environment:
       # PostgreSQL Development Environment Variables
       - POSTGRES_HOST=postgresql
-      - POSTGRES_DB=odoo_db
       - POSTGRES_USER=odoo_user
       - POSTGRES_PASSWORD=JXPF9aDZeZWlrDpf
       - CONF_OVERRIDE_WITH_SECURE=true  # Set to enable merging of config files

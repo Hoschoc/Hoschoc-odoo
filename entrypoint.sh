@@ -61,7 +61,6 @@ check_config "db_host" "$DB_HOST"
 check_config "db_port" "$DB_PORT"
 check_config "db_user" "$DB_USER"
 check_config "db_password" "$DB_PASSWORD"
-check_config "database" "$DB_NAME"
 
 # This section handles different input arguments:
 # - If the first argument is "odoo", it processes "scaffold" or runs Odoo with the provided arguments.
@@ -73,27 +72,24 @@ case "$1" in
         shift # Removes $1 ("odoo")
 
         if [[ "$1" == "scaffold" ]]; then
-            echo "$HEADER Running scaffold command..."
-            echo "$HEADER Executing: $ODOO_BIN $@"
+            echo "$HEADER Executing scaffold command: $ODOO_BIN $@"
             exec $ODOO_BIN "$@"
 
         else
-            echo "$HEADER Checking PostgreSQL readiness and database initialization..."
+            echo "$HEADER Checking PostgreSQL readiness..."
             check-db-status.py "${DB_ARGS[@]}" --timeout=30
-            result=$?
-            if [ $result -eq 2 ]; then
-                echo "$HEADER Database not initialized. Running initialization..."
-                echo "$HEADER Executing: $ODOO_BIN -i base --stop-after-init ${DB_ARGS[@]}"
-                exec $ODOO_BIN -i base --stop-after-init "${DB_ARGS[@]}"
+            if [ $? -ne 0 ]; then
+                echo "$HEADER PostgreSQL is not ready. Exiting."
+                exit 1
             fi
-            echo "$HEADER Database is initialized. Starting odoo..."
+
             echo "$HEADER Executing: $ODOO_BIN $@ ${DB_ARGS[@]}"
             exec $ODOO_BIN "$@" "${DB_ARGS[@]}"
+
         fi
         ;;
     *)
         echo "$HEADER Executing custom command: $@"
-        echo "$HEADER Executing: $@"
         exec "$@"
         ;;
 esac
