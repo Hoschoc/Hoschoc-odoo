@@ -122,16 +122,16 @@ if __name__ == '__main__':
         sys.exit(1)
 
     # Determine the master password
-    if args.mpwd_file:
+    if args.mpwd:
+        master_pwd = args.mpwd
+    else:
+        if not args.mpwd_file:
+            args.mpwd_file = "/etc/odoo/odoo.conf" # Default odoo.conf location
         try:
             master_pwd = read_master_password_from_file(args.mpwd_file)
         except Exception as e:
             print(f"Error reading master password from file: {e}")
             sys.exit(1)
-    elif args.mpwd:
-        master_pwd = args.mpwd
-    else:
-        master_pwd = 'WildfootW'  # Default master password
 
     # Call the function to create the Odoo database
     create_odoo_db(master_pwd, args.db_name, args.login, args.password, args.lang, args.country_code, args.phone, args.url, args.ignore_ssl)
