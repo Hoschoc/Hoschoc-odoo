@@ -1,4 +1,11 @@
-#!/usr/bin/env python3
+#! /usr/bin/env python3
+# -*- coding: utf-8 -*-
+# vim:fenc=utf-8
+#
+# Copyleft (ɔ) 2024 wildfootw <wildfootw@wildfoo.tw>
+#
+# Distributed under the same license as odooBundle-Codebase.
+
 import argparse
 import psycopg2
 import sys

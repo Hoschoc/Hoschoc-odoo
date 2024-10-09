@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
 #
@@ -23,18 +23,18 @@ def on_open(ws):
     ws.send("Hello WebSocket!")
 
 if __name__ == "__main__":
-    websocket.enableTrace(True)
-    ws = websocket.WebSocketApp("wss://localhost:443/websocket/",
-                                on_open=on_open,
-                                on_message=on_message,
-                                on_error=on_error,
-                                on_close=on_close)
-    ws.run_forever(sslopt={"cert_reqs": ssl.CERT_NONE})
-
-#    ws = websocket.WebSocketApp("ws://localhost:8072/",
+#    websocket.enableTrace(True)
+#    ws = websocket.WebSocketApp("wss://localhost:443/websocket/",
 #                                on_open=on_open,
 #                                on_message=on_message,
 #                                on_error=on_error,
 #                                on_close=on_close)
-#
-#    ws.run_forever()
+#    ws.run_forever(sslopt={"cert_reqs": ssl.CERT_NONE})
+
+    ws = websocket.WebSocketApp("ws://localhost:8072/",
+                                on_open=on_open,
+                                on_message=on_message,
+                                on_error=on_error,
+                                on_close=on_close)
+
+    ws.run_forever()
