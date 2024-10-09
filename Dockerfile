@@ -19,7 +19,7 @@ FROM ubuntu:jammy AS base
 SHELL ["/bin/bash", "-xo", "pipefail", "-c"]
 
 # Set working directory inside the container
-WORKDIR /usr/src/app
+WORKDIR /opt/odoo
 
 # Generate locale C.UTF-8 for postgres and general locale data
 ENV LANG en_US.UTF-8
@@ -168,12 +168,12 @@ ENV ODOO_RC /etc/odoo/odoo.conf
 
 # Copy local Odoo source code and addons to the image
 # Copy entrypoint script and Odoo configuration file
-COPY ./odoo /usr/src/app/odoo
+COPY ./odoo /opt/odoo/core
 COPY ./addons /opt/odoo/addons
 COPY ./odoo.conf /etc/odoo/
-COPY ./check-db-status.py /usr/local/bin/
+COPY ./utils /usr/local/bin/
 COPY ./entrypoint.sh /
-WORKDIR /usr/src/app/odoo
+#WORKDIR /opt/odoo/core
 
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["odoo"]

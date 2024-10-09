@@ -5,7 +5,7 @@ HEADER="[entrypoint.sh]"
 echo "$HEADER Running with PID $$ at $(date)"
 
 # Define the path to odoo-bin
-ODOO_BIN="/usr/src/app/odoo/odoo-bin"
+ODOO_BIN="/opt/odoo/core/odoo-bin"
 
 # Function to combine general and sensitive config files into a single config If the environment variable CONF_OVERRIDE_WITH_SECURE is set to "true", it merges the content of the general config file (/etc/odoo/odoo-general.conf) and the sensitive config file (/etc/odoo/odoo-sensitive.conf) into a single file (/etc/odoo/odoo.conf). This merged file will then be used by odoo during startup.
 #
