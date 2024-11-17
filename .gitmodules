@@ -1,3 +1,3 @@
 [submodule "odoo"]
 	path = odoo
-	url = git@github.com:Hoschoc/odoo.git
+	url = https://github.com/Hoschoc/odoo.git
